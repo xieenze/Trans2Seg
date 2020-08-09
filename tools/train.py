@@ -85,7 +85,7 @@ class Trainer(object):
 
         # optimizer, for model just includes encoder, decoder(head and auxlayer).
         self.optimizer = get_optimizer(self.model)
-
+    
         # lr scheduling
         self.lr_scheduler = get_scheduler(self.optimizer, max_iters=self.max_iters,
                                           iters_per_epoch=self.iters_per_epoch)

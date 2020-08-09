@@ -34,7 +34,7 @@ def print_iou(iu, mean_pixel_acc, class_names=None, show_no_back=False):
 
 
 @torch.no_grad()
-def show_flops_params(model, device, input_shape=[1, 3, 1024, 2048]):
+def show_flops_params(model, device, input_shape=[1, 3, 512, 512]):
     #summary(model, tuple(input_shape[1:]), device=device)
     input = torch.randn(*input_shape).to(torch.device(device))
     flops, params = profile(model, inputs=(input,), verbose=False)

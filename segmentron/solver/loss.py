@@ -109,7 +109,6 @@ class OhemCrossEntropy2d(nn.Module):
             valid_mask = valid_mask * kept_mask
             target = target * kept_mask.long()
 
-        # target = target.masked_fill_(1 - valid_mask, self.ignore_index)
         target = target.masked_fill_(~valid_mask, self.ignore_index)
         target = target.view(n, h, w)
 

@@ -54,6 +54,7 @@ def load_backbone_pretrained(model, backbone):
             logging.info(msg)
 
 
+
 def get_segmentation_backbone(backbone, norm_layer=torch.nn.BatchNorm2d):
     """
     Built the backbone model, defined by `cfg.MODEL.BACKBONE`.
@@ -61,4 +62,3 @@ def get_segmentation_backbone(backbone, norm_layer=torch.nn.BatchNorm2d):
     model = BACKBONE_REGISTRY.get(backbone)(norm_layer)
     load_backbone_pretrained(model, backbone)
     return model
-
