@@ -89,7 +89,7 @@ TEST.TEST_MODEL_PATH your_test_model_path
 ### Eval with a multiple GPUs
 ```
 CUDA_VISIBLE_DEVICES=0,1,2,3 ./tools/dist_test.sh ${CONFIG_FILE} ${GPU_NUM} \
-TEST.TEST_MODEL_PATH your_test_model_path
+    TEST.TEST_MODEL_PATH your_test_model_path
 ```
 
 ## References

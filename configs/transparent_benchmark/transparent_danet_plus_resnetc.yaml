@@ -6,7 +6,7 @@ TRAIN:
     EPOCHS: 150
     BATCH_SIZE: 4
     CROP_SIZE: 513
-    MODEL_SAVE_DIR: 'workdirs/transparent_new/deelab_r50_150'
+    MODEL_SAVE_DIR: 'workdirs/transparent_new/danet_r50_150'
 TEST:
     BATCH_SIZE: 4
     CROP_SIZE: (513, 513)
@@ -15,5 +15,5 @@ SOLVER:
     LR: 0.01
 
 MODEL:
-    MODEL_NAME: "DeepLabV3_Plus"
+    MODEL_NAME: "DANet"
     BACKBONE: "resnet50c"

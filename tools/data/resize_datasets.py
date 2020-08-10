@@ -23,7 +23,7 @@ def random_size(shot_size):
 def resize_dataset(i_root, o_root, mode="train"):
 
     out_images_path = osp.join(o_root, mode, "images")
-    out_masks_path = osp.join(o_root, mode, "mask_12")
+    out_masks_path = osp.join(o_root, mode, "masks_12")
 
     check_dir(o_root)
     check_dir(out_images_path)

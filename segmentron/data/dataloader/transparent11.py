@@ -35,7 +35,7 @@ class TransparentSegmentation(SegmentationDataset):
     >>>     trainset, 4, shuffle=True,
     >>>     num_workers=4)
     """
-    BASE_DIR = 'Trans10K'
+    BASE_DIR = 'Trans10K_cls12_new'
     NUM_CLASS = 12
 
     def __init__(self, root='datasets/transparent', split='test', mode=None, transform=None, **kwargs):
@@ -101,9 +101,13 @@ def _get_trans10k_pairs(folder, mode='train'):
     if mode == 'train':
         img_folder = os.path.join(folder, 'train/images')
         mask_folder = os.path.join(folder, 'train/masks_12')
-    else:
+    elif mode == "validation":
         img_folder = os.path.join(folder, 'validation/images')
         mask_folder = os.path.join(folder, 'validation/masks_12')
+    else:
+        img_folder = os.path.join(folder, 'test/images')
+        mask_folder = os.path.join(folder, 'test/masks_12')
+
     for filename in os.listdir(img_folder):
         basename, _ = os.path.splitext(filename)
         if filename.endswith(".jpg"):
