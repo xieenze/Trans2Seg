@@ -43,5 +43,9 @@ def load_model_pretrain(model):
     else:
         if cfg.TEST.TEST_MODEL_PATH:
             logging.info('load test model from {}'.format(cfg.TEST.TEST_MODEL_PATH))
-            msg = model.load_state_dict(torch.load(cfg.TEST.TEST_MODEL_PATH), strict=False)
+            model_dic = torch.load(cfg.TEST.TEST_MODEL_PATH)
+            if 'state_dict' in model_dic.keys():
+                # load the last checkpoint
+                model_dic = model_dic['state_dict']
+            msg = model.load_state_dict(model_dic, strict=False)
             logging.info(msg)

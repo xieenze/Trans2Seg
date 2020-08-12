@@ -101,10 +101,11 @@ def _get_trans10k_pairs(folder, mode='train'):
     if mode == 'train':
         img_folder = os.path.join(folder, 'train/images')
         mask_folder = os.path.join(folder, 'train/masks_12')
-    elif mode == "validation":
+    elif mode == "val":
         img_folder = os.path.join(folder, 'validation/images')
         mask_folder = os.path.join(folder, 'validation/masks_12')
     else:
+        assert  mode == "test"
         img_folder = os.path.join(folder, 'test/images')
         mask_folder = os.path.join(folder, 'test/masks_12')
 

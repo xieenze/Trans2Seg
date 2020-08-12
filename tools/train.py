@@ -43,6 +43,7 @@ class Trainer(object):
                        'crop_size': cfg.TRAIN.CROP_SIZE}
         train_dataset = get_segmentation_dataset(cfg.DATASET.NAME, split='train', mode='train', **data_kwargs)
         val_dataset = get_segmentation_dataset(cfg.DATASET.NAME, split='val', mode=cfg.DATASET.MODE, **data_kwargs)
+        test_dataset = get_segmentation_dataset(cfg.DATASET.NAME, split='test', mode=cfg.DATASET.MODE, **data_kwargs)
         self.iters_per_epoch = len(train_dataset) // (args.num_gpus * cfg.TRAIN.BATCH_SIZE)
         self.max_iters = cfg.TRAIN.EPOCHS * self.iters_per_epoch
 
@@ -50,6 +51,9 @@ class Trainer(object):
         train_batch_sampler = make_batch_data_sampler(train_sampler, cfg.TRAIN.BATCH_SIZE, self.max_iters, drop_last=True)
         val_sampler = make_data_sampler(val_dataset, False, args.distributed)
         val_batch_sampler = make_batch_data_sampler(val_sampler, cfg.TEST.BATCH_SIZE, drop_last=False)
+
+        test_sampler = make_data_sampler(test_dataset, False, args.distributed)
+        test_batch_sampler = make_batch_data_sampler(test_sampler, cfg.TEST.BATCH_SIZE, drop_last=False)
 
         self.train_loader = data.DataLoader(dataset=train_dataset,
                                             batch_sampler=train_batch_sampler,
@@ -60,6 +64,10 @@ class Trainer(object):
                                           num_workers=cfg.DATASET.WORKERS,
                                           pin_memory=True)
 
+        self.test_loader = data.DataLoader(dataset=test_dataset,
+                                          batch_sampler=test_batch_sampler,
+                                          num_workers=cfg.DATASET.WORKERS,
+                                          pin_memory=True)
         # create network
         self.model = get_segmentation_model().to(self.device)
         
@@ -167,9 +175,15 @@ class Trainer(object):
 
         total_training_time = time.time() - start_time
         total_training_str = str(datetime.timedelta(seconds=total_training_time))
+
+        self.model.eval()
+        self.test()
+
         logging.info(
             "Total training time: {} ({:.4f}s / it)".format(
                 total_training_str, total_training_time / max_iters))
+
+
 
     def validation(self, epoch):
         self.metric.reset()
@@ -204,6 +218,36 @@ class Trainer(object):
             self.best_pred = mIoU
             logging.info('Epoch {} is the best model, best pixAcc: {:.3f}, mIoU: {:.3f}, save the model..'.format(epoch, pixAcc * 100, mIoU * 100))
             save_checkpoint(model, epoch, is_best=True)
+
+    def test(self,):
+        self.metric.reset()
+        if self.args.distributed:
+            model = self.model.module
+        else:
+            model = self.model
+        torch.cuda.empty_cache()
+        model.eval()
+        for i, (image, target, filename) in enumerate(self.test_loader):
+            image = image.to(self.device)
+            target = target.to(self.device)
+
+            with torch.no_grad():
+                if cfg.DATASET.MODE == 'test' or cfg.TEST.CROP_SIZE is None:
+                    output = model(image)[0]
+                else:
+                    size = image.size()[2:]
+                    pad_height = cfg.TEST.CROP_SIZE[0] - size[0]
+                    pad_width = cfg.TEST.CROP_SIZE[1] - size[1]
+                    image = F.pad(image, (0, pad_height, 0, pad_width))
+                    output = model(image)[0]
+                    output = output[..., :size[0], :size[1]]
+
+            self.metric.update(output, target)
+            pixAcc, mIoU = self.metric.get()
+            logging.info("[EVAL] Sample: {:d}, pixAcc: {:.3f}, mIoU: {:.3f}".format(i + 1, pixAcc * 100, mIoU * 100))
+        pixAcc, mIoU = self.metric.get()
+        logging.info("[TEST END]  pixAcc: {:.3f}, mIoU: {:.3f}".format(pixAcc * 100, mIoU * 100))
+        synchronize()
 
 
 if __name__ == '__main__':

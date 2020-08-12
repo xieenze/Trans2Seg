@@ -42,9 +42,9 @@ class PSPNet(SegBaseModel):
 
 
 class _PSPHead(nn.Module):
-    def __init__(self, nclass, norm_layer=nn.BatchNorm2d, norm_kwargs=None, **kwargs):
+    def __init__(self, nclass, norm_layer=nn.BatchNorm2d, norm_kwargs=None):
         super(_PSPHead, self).__init__()
-        self.psp = PyramidPooling(2048, norm_layer=norm_layer, norm_kwargs=norm_kwargs)
+        self.psp = PyramidPooling(2048, norm_layer=norm_layer)
         self.block = nn.Sequential(
             nn.Conv2d(4096, 512, 3, padding=1, bias=False),
             norm_layer(512, **({} if norm_kwargs is None else norm_kwargs)),
