@@ -22,8 +22,8 @@ class TransLab(SegBaseModel):
         if self.backbone.startswith('mobilenet'):
             c1_channels = 24
             c4_channels = 320
-        else:
-            c1_channels = 256
+        else:   
+            c1_channels = 256       
             c4_channels = 2048
             c2_channel = 512
 
@@ -68,7 +68,6 @@ class TransLab(SegBaseModel):
         scales = cfg.TEST.SCALES
         batch, _, h, w = image.shape
         base_size = max(h, w)
-        # scores = torch.zeros((batch, self.nclass, h, w)).to(image.device)
         scores = None
         scores_boundary = None
         for scale in scales:

@@ -6,7 +6,7 @@ TRAIN:
     EPOCHS: 60
     BATCH_SIZE: 4
     CROP_SIZE: 513
-    MODEL_SAVE_DIR: 'workdirs/transparent/biseg_r18 _60'
+    MODEL_SAVE_DIR: 'workdirs/transparent/biseg_r18_60'
 TEST:
     BATCH_SIZE: 8
 
