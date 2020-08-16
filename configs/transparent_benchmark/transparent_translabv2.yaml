@@ -6,7 +6,7 @@ TRAIN:
     EPOCHS: 80
     BATCH_SIZE: 2
     CROP_SIZE: 513
-    MODEL_SAVE_DIR: 'workdirs/transparent_new/translab_r50_80'
+    MODEL_SAVE_DIR: 'workdirs/transparent_new/translab_r50_80v2'
 TEST:
     BATCH_SIZE: 4
     CROP_SIZE: (513, 513)
