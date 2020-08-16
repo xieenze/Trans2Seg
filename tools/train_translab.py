@@ -221,7 +221,7 @@ class Trainer(object):
                     pad_height = cfg.TEST.CROP_SIZE[0] - size[0]
                     pad_width = cfg.TEST.CROP_SIZE[1] - size[1]
                     image = F.pad(image, (0, pad_height, 0, pad_width))
-                    output = model(image)[0]
+                    output, output_boundary = model(image)[0][0], model(image)[1][0]
                     output = output[..., :size[0], :size[1]]
 
             self.metric.update(output, target)
@@ -252,7 +252,7 @@ class Trainer(object):
 
             with torch.no_grad():
                 if cfg.DATASET.MODE == 'test' or cfg.TEST.CROP_SIZE is None:
-                    output = model(image)[0]
+                    output, output_boundary = model(image)[0][0], model(image)[1][0]
                 else:
                     size = image.size()[2:]
                     pad_height = cfg.TEST.CROP_SIZE[0] - size[0]
