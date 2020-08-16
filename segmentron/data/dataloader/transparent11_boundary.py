@@ -6,9 +6,9 @@ import numpy as np
 
 from PIL import Image
 from .seg_data_base import SegmentationDataset
+import cv2
 
-
-class TransparentSegmentation(SegmentationDataset):
+class TransparentSegmentationBoundary(SegmentationDataset):
     """ADE20K Semantic Segmentation Dataset.
 
     Parameters
@@ -35,11 +35,11 @@ class TransparentSegmentation(SegmentationDataset):
     >>>     trainset, 4, shuffle=True,
     >>>     num_workers=4)
     """
-    BASE_DIR = 'Trans10K'
+    BASE_DIR = 'Trans10K_cls12_new'
     NUM_CLASS = 12
 
     def __init__(self, root='datasets/transparent', split='test', mode=None, transform=None, **kwargs):
-        super(TransparentSegmentation, self).__init__(root, split, mode, transform, **kwargs)
+        super(TransparentSegmentationBoundary, self).__init__(root, split, mode, transform, **kwargs)
         root = os.path.join(self.root, self.BASE_DIR)
         assert os.path.exists(root), "Please put the data in {SEG_ROOT}/datasets/transparent"
         self.images, self.masks = _get_trans10k_pairs(root, split)
@@ -59,6 +59,13 @@ class TransparentSegmentation(SegmentationDataset):
         # final transform
         img, mask = self._img_transform(img), self._mask_transform(mask)
         return img, mask
+
+    def get_boundary(self, mask, thicky=8):
+        tmp = mask.data.numpy().astype('uint8')
+        contour, _ = cv2.findContours(tmp, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        boundary = np.zeros_like(tmp)
+        boundary = cv2.drawContours(boundary, contour, -1, 1, thicky)
+        return boundary
 
     def __getitem__(self, index):
         img = Image.open(self.images[index]).convert('RGB')
@@ -103,9 +110,14 @@ def _get_trans10k_pairs(folder, mode='train'):
     if mode == 'train':
         img_folder = os.path.join(folder, 'train/images')
         mask_folder = os.path.join(folder, 'train/masks_12')
-    else:
+    elif mode == "val":
         img_folder = os.path.join(folder, 'validation/images')
         mask_folder = os.path.join(folder, 'validation/masks_12')
+    else:
+        assert  mode == "test"
+        img_folder = os.path.join(folder, 'test/images')
+        mask_folder = os.path.join(folder, 'test/masks_12')
+
     for filename in os.listdir(img_folder):
         basename, _ = os.path.splitext(filename)
         if filename.endswith(".jpg"):
@@ -120,6 +132,5 @@ def _get_trans10k_pairs(folder, mode='train'):
 
     return img_paths, mask_paths
 
-
 if __name__ == '__main__':
-    train_dataset = TransparentSegmentation()
+    train_dataset = TransparentSegmentationBoundary()

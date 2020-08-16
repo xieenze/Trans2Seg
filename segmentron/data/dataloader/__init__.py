@@ -8,6 +8,7 @@ from .pascal_voc import VOCSegmentation
 from .pascal_aug import VOCAugSegmentation
 from .sbu_shadow import SBUSegmentation
 from .transparent11 import TransparentSegmentation
+from .transparent11_boundary import TransparentSegmentationBoundary
 
 datasets = {
     'ade20k': ADE20KSegmentation,
@@ -16,7 +17,8 @@ datasets = {
     'coco': COCOSegmentation,
     'cityscape': CitySegmentation,
     'sbu': SBUSegmentation,
-    'transparent11': TransparentSegmentation
+    'transparent11': TransparentSegmentation, 
+    'transparent11_boundary': TransparentSegmentationBoundary
 }
 
 

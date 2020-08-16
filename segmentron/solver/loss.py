@@ -12,6 +12,34 @@ from ..config import cfg
 
 __all__ = ['get_segmentation_loss']
 
+class TranslabLoss(nn.CrossEntropyLoss):
+    def __init__(self, aux=True, aux_weight=0.2, ignore_index=-1, **kwargs):
+        super(TranslabLoss, self).__init__(ignore_index=ignore_index)
+        self.aux = aux
+        self.aux_weight = aux_weight
+
+    def _aux_forward(self, *inputs, **kwargs):
+        *preds, target = tuple(inputs)
+
+        loss = super(TranslabLoss, self).forward(preds[0], target)
+        for i in range(1, len(preds)):
+            aux_loss = super(TranslabLoss, self).forward(preds[i], target)
+            loss += self.aux_weight * aux_loss
+        return loss
+
+    def _multiple_forward(self, *inputs):
+        *preds, target = tuple(inputs)
+        loss = super(TranslabLoss, self).forward(preds[0], target)
+        for i in range(1, len(preds)):
+            loss += super(TranslabLoss, self).forward(preds[i], target)
+        return loss
+
+    def forward(self, *inputs, **kwargs):
+        preds, target = tuple(inputs)
+        inputs = tuple(list(preds) + [target])
+
+        loss = dict(loss=super(TranslabLoss, self).forward(*inputs))
+        return loss
 
 class MixSoftmaxCrossEntropyLoss(nn.CrossEntropyLoss):
     def __init__(self, aux=True, aux_weight=0.2, ignore_index=-1, **kwargs):
@@ -398,6 +426,9 @@ def get_segmentation_loss(model, use_ohem=False, **kwargs):
     elif cfg.SOLVER.LOSS_NAME == 'dice':
         logging.info('Use dice loss!')
         return DiceLoss(**kwargs)
+    elif cfg.SOLVER.LOSS_NAME == 'binary_dice':
+        logging.info('Use binary_dice loss!')
+        return BinaryDiceLoss(**kwargs)
 
     model = model.lower()
     if model == 'icnet':
@@ -407,5 +438,7 @@ def get_segmentation_loss(model, use_ohem=False, **kwargs):
     elif model == 'pointrend':
         logging.info('Use pointrend loss!')
         return PointRendLoss(**kwargs)
+    elif model == 'translab':
+        return TranslabLoss(**kwargs)
     else:
         return MixSoftmaxCrossEntropyLoss(**kwargs)
