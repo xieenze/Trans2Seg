@@ -153,7 +153,7 @@ class Trainer(object):
             # from IPython import embed; embed()
             lossb_dict = dict(loss=self.criterion_b(outputs_boundary[0], boundarys, valid))
 
-            weight_boundary = 5
+            weight_boundary = cfg.MODEL.TRANSLAB.BOUNDARY_WEIGHT
             lossb_dict['loss'] = weight_boundary * lossb_dict['loss']
 
             losses = sum(loss for loss in loss_dict.values()) + \

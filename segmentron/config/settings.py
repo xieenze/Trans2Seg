@@ -211,3 +211,6 @@ cfg.MODEL.HRNET.STAGE4.NUM_CHANNELS = [32, 64, 128, 256]
 cfg.MODEL.HRNET.STAGE4.BLOCK = 'BASIC'
 cfg.MODEL.HRNET.STAGE4.FUSE_METHOD = 'SUM'
 
+
+########################## translab config ######################################
+cfg.MODEL.TRANSLAB.BOUNDARY_WEIGHT = 5
