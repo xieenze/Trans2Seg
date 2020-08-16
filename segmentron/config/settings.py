@@ -44,9 +44,9 @@ cfg.TRAIN.CROP_SIZE = 769
 # train base size
 cfg.TRAIN.BASE_SIZE = 1024
 # model output dir
-cfg.TRAIN.MODEL_SAVE_DIR = 'runs/checkpoints/'
+cfg.TRAIN.MODEL_SAVE_DIR = 'workdirs/'
 # log dir
-cfg.TRAIN.LOG_SAVE_DIR = 'runs/logs/'
+cfg.TRAIN.LOG_SAVE_DIR = cfg.TRAIN.MODEL_SAVE_DIR
 # pretrained model for eval or finetune
 cfg.TRAIN.PRETRAINED_MODEL_PATH = ''
 # use pretrained backbone model over imagenet
@@ -58,7 +58,7 @@ cfg.TRAIN.RESUME_MODEL_PATH = ''
 # whether to use synchronize bn
 cfg.TRAIN.SYNC_BATCH_NORM = True
 # save model every checkpoint-epoch
-cfg.TRAIN.SNAPSHOT_EPOCH = 10
+cfg.TRAIN.SNAPSHOT_EPOCH = 1
 
 ########################### optimizer config ##################################
 # base learning rate
