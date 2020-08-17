@@ -27,6 +27,8 @@ from segmentron.utils.options import parse_args
 from segmentron.utils.default_setup import default_setup
 from segmentron.utils.visualize import show_flops_params
 from segmentron.config import cfg
+from tabulate import tabulate
+from IPython import embed
 
 class Trainer(object):
     def __init__(self, args):
@@ -39,16 +41,24 @@ class Trainer(object):
             transforms.Normalize(cfg.DATASET.MEAN, cfg.DATASET.STD),
         ])
         # dataset and dataloader
-        data_kwargs = {'transform': input_transform, 'base_size': cfg.TRAIN.BASE_SIZE,
+        data_kwargs = {'transform': input_transform,
+                       'base_size': cfg.TRAIN.BASE_SIZE,
                        'crop_size': cfg.TRAIN.CROP_SIZE}
+
+        data_kwargs_testval = {'transform': input_transform,
+                       'base_size': cfg.TRAIN.BASE_SIZE,
+                       'crop_size': cfg.TEST.CROP_SIZE}
+
         train_dataset = get_segmentation_dataset(cfg.DATASET.NAME, split='train', mode='train', **data_kwargs)
-        val_dataset = get_segmentation_dataset(cfg.DATASET.NAME, split='val', mode=cfg.DATASET.MODE, **data_kwargs)
-        test_dataset = get_segmentation_dataset(cfg.DATASET.NAME, split='test', mode=cfg.DATASET.MODE, **data_kwargs)
+        val_dataset = get_segmentation_dataset(cfg.DATASET.NAME, split='val', mode='testval', **data_kwargs_testval)
+        test_dataset = get_segmentation_dataset(cfg.DATASET.NAME, split='test', mode='testval', **data_kwargs_testval)
+
         self.iters_per_epoch = len(train_dataset) // (args.num_gpus * cfg.TRAIN.BATCH_SIZE)
         self.max_iters = cfg.TRAIN.EPOCHS * self.iters_per_epoch
 
         train_sampler = make_data_sampler(train_dataset, shuffle=True, distributed=args.distributed)
         train_batch_sampler = make_batch_data_sampler(train_sampler, cfg.TRAIN.BATCH_SIZE, self.max_iters, drop_last=True)
+
         val_sampler = make_data_sampler(val_dataset, False, args.distributed)
         val_batch_sampler = make_batch_data_sampler(val_sampler, cfg.TEST.BATCH_SIZE, drop_last=False)
 
@@ -63,11 +73,11 @@ class Trainer(object):
                                           batch_sampler=val_batch_sampler,
                                           num_workers=cfg.DATASET.WORKERS,
                                           pin_memory=True)
-
         self.test_loader = data.DataLoader(dataset=test_dataset,
                                           batch_sampler=test_batch_sampler,
                                           num_workers=cfg.DATASET.WORKERS,
                                           pin_memory=True)
+
         # create network
         self.model = get_segmentation_model().to(self.device)
         
@@ -77,7 +87,6 @@ class Trainer(object):
                 show_flops_params(copy.deepcopy(self.model), args.device)
             except Exception as e:
                 logging.warning('get flops and params error: {}'.format(e))
-
         if cfg.MODEL.BN_TYPE not in ['BN']:
             logging.info('Batch norm type is {}, convert_sync_batchnorm is not effective'.format(cfg.MODEL.BN_TYPE))
         elif args.distributed and cfg.TRAIN.SYNC_BATCH_NORM:
@@ -85,19 +94,14 @@ class Trainer(object):
             logging.info('SyncBatchNorm is effective!')
         else:
             logging.info('Not use SyncBatchNorm!')
-
         # create criterion
         self.criterion = get_segmentation_loss(cfg.MODEL.MODEL_NAME, use_ohem=cfg.SOLVER.OHEM,
                                                aux=cfg.SOLVER.AUX, aux_weight=cfg.SOLVER.AUX_WEIGHT,
                                                ignore_index=cfg.DATASET.IGNORE_INDEX).to(self.device)
-
         # optimizer, for model just includes encoder, decoder(head and auxlayer).
         self.optimizer = get_optimizer(self.model)
-    
         # lr scheduling
-        self.lr_scheduler = get_scheduler(self.optimizer, max_iters=self.max_iters,
-                                          iters_per_epoch=self.iters_per_epoch)
-
+        self.lr_scheduler = get_scheduler(self.optimizer, max_iters=self.max_iters, iters_per_epoch=self.iters_per_epoch)
         # resume checkpoint if needed
         self.start_epoch = 0
         if args.resume and os.path.isfile(args.resume):
@@ -114,14 +118,12 @@ class Trainer(object):
                 self.lr_scheduler.load_state_dict(resume_sate['lr_scheduler'])
 
         if args.distributed:
-            self.model = nn.parallel.DistributedDataParallel(self.model, device_ids=[args.local_rank],
+            self.model = nn.parallel.DistributedDataParallel(self.model,
+                                                             device_ids=[args.local_rank],
                                                              output_device=args.local_rank,
                                                              find_unused_parameters=True)
-
         # evaluation metrics
         self.metric = SegmentationMetric(train_dataset.num_class, args.distributed)
-        self.best_pred = 0.0
-
 
     def train(self):
         self.save_to_disk = get_rank() == 0
@@ -142,9 +144,7 @@ class Trainer(object):
 
             outputs = self.model(images)
             loss_dict = self.criterion(outputs, targets)
-
             losses = sum(loss for loss in loss_dict.values())
-
             # reduce losses over all GPUs for logging purposes
             loss_dict_reduced = reduce_loss_dict(loss_dict)
             losses_reduced = sum(loss for loss in loss_dict_reduced.values())
@@ -156,7 +156,6 @@ class Trainer(object):
 
             eta_seconds = ((time.time() - start_time) / iteration) * (max_iters - iteration)
             eta_string = str(datetime.timedelta(seconds=int(eta_seconds)))
-
             if iteration % log_per_iters == 0 and self.save_to_disk:
                 logging.info(
                     "Epoch: {:d}/{:d} || Iters: {:d}/{:d} || Lr: {:.6f} || "
@@ -175,15 +174,8 @@ class Trainer(object):
 
         total_training_time = time.time() - start_time
         total_training_str = str(datetime.timedelta(seconds=total_training_time))
-
-        self.model.eval()
-        self.test()
-
-        logging.info(
-            "Total training time: {} ({:.4f}s / it)".format(
-                total_training_str, total_training_time / max_iters))
-
-
+        logging.info("Total training time: {} ({:.4f}s / it)".format(total_training_str,
+                                                                     total_training_time / max_iters))
 
     def validation(self, epoch):
         self.metric.reset()
@@ -202,22 +194,16 @@ class Trainer(object):
                     output = model(image)[0]
                 else:
                     size = image.size()[2:]
-                    pad_height = cfg.TEST.CROP_SIZE[0] - size[0]
-                    pad_width = cfg.TEST.CROP_SIZE[1] - size[1]
-                    image = F.pad(image, (0, pad_height, 0, pad_width))
+                    assert cfg.TEST.CROP_SIZE[0] == size[0]
+                    assert cfg.TEST.CROP_SIZE[1] == size[1]
                     output = model(image)[0]
-                    output = output[..., :size[0], :size[1]]
 
             self.metric.update(output, target)
-            pixAcc, mIoU = self.metric.get()
+            pixAcc, mIoU, category_iou = self.metric.get(return_category_iou=True)
             logging.info("[EVAL] Sample: {:d}, pixAcc: {:.3f}, mIoU: {:.3f}".format(i + 1, pixAcc * 100, mIoU * 100))
         pixAcc, mIoU = self.metric.get()
         logging.info("[EVAL END] Epoch: {:d}, pixAcc: {:.3f}, mIoU: {:.3f}".format(epoch, pixAcc * 100, mIoU * 100))
         synchronize()
-        if self.best_pred < mIoU and self.save_to_disk:
-            self.best_pred = mIoU
-            logging.info('Epoch {} is the best model, best pixAcc: {:.3f}, mIoU: {:.3f}, save the model..'.format(epoch, pixAcc * 100, mIoU * 100))
-            save_checkpoint(model, epoch, is_best=True)
 
     def test(self,):
         self.metric.reset()
@@ -236,18 +222,25 @@ class Trainer(object):
                     output = model(image)[0]
                 else:
                     size = image.size()[2:]
-                    pad_height = cfg.TEST.CROP_SIZE[0] - size[0]
-                    pad_width = cfg.TEST.CROP_SIZE[1] - size[1]
-                    image = F.pad(image, (0, pad_height, 0, pad_width))
+                    assert cfg.TEST.CROP_SIZE[0] == size[0]
+                    assert cfg.TEST.CROP_SIZE[1] == size[1]
                     output = model(image)[0]
-                    output = output[..., :size[0], :size[1]]
 
             self.metric.update(output, target)
-            pixAcc, mIoU = self.metric.get()
-            logging.info("[EVAL] Sample: {:d}, pixAcc: {:.3f}, mIoU: {:.3f}".format(i + 1, pixAcc * 100, mIoU * 100))
-        pixAcc, mIoU = self.metric.get()
-        logging.info("[TEST END]  pixAcc: {:.3f}, mIoU: {:.3f}".format(pixAcc * 100, mIoU * 100))
+            pixAcc, mIoU, category_iou = self.metric.get(return_category_iou=True)
+            logging.info("[TEST] Sample: {:d}, pixAcc: {:.3f}, mIoU: {:.3f}".format(i + 1, pixAcc * 100, mIoU * 100))
+
         synchronize()
+        pixAcc, mIoU, category_iou = self.metric.get(return_category_iou=True)
+        logging.info("[TEST END]  pixAcc: {:.3f}, mIoU: {:.3f}".format(pixAcc * 100, mIoU * 100))
+
+        headers = ['class id', 'class name', 'iou']
+        table = []
+        self.classes = self.test_loader.classes
+        for i, cls_name in enumerate(self.classes):
+            table.append([cls_name, category_iou[i]])
+        logging.info('Category iou: \n {}'.format(tabulate(table, headers, tablefmt='grid', showindex="always",
+                                                           numalign='center', stralign='center')))
 
 
 if __name__ == '__main__':
@@ -255,7 +248,7 @@ if __name__ == '__main__':
     # get config
     cfg.update_from_file(args.config_file)
     cfg.update_from_list(args.opts)
-    cfg.PHASE = 'train'
+    cfg.PHASE = 'train' if not args.test else 'test'
     cfg.ROOT_PATH = root_path
     cfg.check_and_freeze()
 
@@ -264,4 +257,10 @@ if __name__ == '__main__':
 
     # create a trainer and start train
     trainer = Trainer(args)
-    trainer.train()
+    if args.test:
+        assert 'pth' in cfg.TEST.TEST_MODEL_PATH, 'please provide test model pth!'
+        logging.info('test model......')
+        trainer.test()
+    else:
+        trainer.train()
+        trainer.test()

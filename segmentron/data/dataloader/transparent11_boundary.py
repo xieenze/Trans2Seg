@@ -35,7 +35,7 @@ class TransparentSegmentationBoundary(SegmentationDataset):
     >>>     trainset, 4, shuffle=True,
     >>>     num_workers=4)
     """
-    BASE_DIR = 'Trans10K_cls12_new'
+    BASE_DIR = 'Trans10K_cls12'
     NUM_CLASS = 12
 
     def __init__(self, root='datasets/transparent', split='test', mode=None, transform=None, **kwargs):

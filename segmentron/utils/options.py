@@ -18,6 +18,8 @@ def parse_args():
                         help='run validation every val-epoch')
     parser.add_argument('--skip-val', action='store_true', default=False,
                         help='skip validation during training')
+    parser.add_argument('--test', action='store_true', default=False,
+                        help='test model')
     # for visual
     parser.add_argument('--input-img', type=str, default='tools/demo_vis.png',
                         help='path to the input image or a directory of images')
