@@ -1,4 +1,4 @@
-# Segment_Transparent_Objects
+# Transparent Transformer Segmentation
 ## Introduction
 This repository contains the data and code for "Segmenting Transparent Objects in the Wild with Transformer".
 
