@@ -91,8 +91,9 @@ class TransparentSegmentation(SegmentationDataset):
     @property
     def classes(self):
         """Category names."""
-        return ('background', 'Shelf', 'Jar or Tank', 'Freezer', 'Window',
-                'Glass Door', 'Eyeglass', 'Cup', 'Floor Glass', 'Glass Bow', 'Water Bottle', 'Storage Box')
+        return ('Background', 'Shelf', 'Jar or Tank', 'Freezer', 'Window',
+                'Glass Door', 'Eyeglass', 'Cup', 'Floor Glass', 'Glass Bow',
+                'Water Bottle', 'Storage Box')
 
 
 def _get_trans10k_pairs(folder, mode='train'):

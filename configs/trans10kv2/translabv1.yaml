@@ -1,5 +1,5 @@
 DATASET:
-    NAME: "transparent11"
+    NAME: "transparent11_boundary"
     MEAN: [0.485, 0.456, 0.406]
     STD: [0.229, 0.224, 0.225]
 TRAIN:
@@ -7,15 +7,16 @@ TRAIN:
     BATCH_SIZE: 4
     CROP_SIZE: 480
     BASE_SIZE: 513
-    MODEL_SAVE_DIR: 'workdirs/trans10kv2/deeplab_r50'
+    MODEL_SAVE_DIR: 'workdirs/trans10kv2/translab_r50_v1'
 TEST:
-    BATCH_SIZE: 4
-#    CROP_SIZE: (512, 512)
+    BATCH_SIZE: 32
     CROP_SIZE: (513, 513)
 
 SOLVER:
     LR: 0.01
-    
+
 MODEL:
-    MODEL_NAME: "DeepLabV3_Plus"
-    BACKBONE: "resnet50c"
+    MODEL_NAME: "TransLab"
+    BACKBONE: "resnet50"
+    TRANSLAB:
+        BOUNDARY_WEIGHT: 5

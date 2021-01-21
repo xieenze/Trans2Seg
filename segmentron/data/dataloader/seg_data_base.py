@@ -6,6 +6,7 @@ import torchvision
 
 from PIL import Image, ImageOps, ImageFilter
 from ...config import cfg
+from IPython import embed
 
 __all__ = ['SegmentationDataset']
 
@@ -68,46 +69,55 @@ class SegmentationDataset(object):
         return img, mask
 
     def _sync_transform(self, img, mask, resize=False):
+        # first resize image to fix size
         if resize:
             img = img.resize(self.crop_size, Image.BILINEAR)
             mask = mask.resize(self.crop_size, Image.NEAREST)
+
         # random mirror
         if cfg.AUG.MIRROR and random.random() < 0.5:
             img = img.transpose(Image.FLIP_LEFT_RIGHT)
             mask = mask.transpose(Image.FLIP_LEFT_RIGHT)
-        crop_size = self.crop_size
-        # random scale (short edge)
-        short_size = random.randint(int(self.base_size * 0.5), int(self.base_size * 2.0))
-        w, h = img.size
-        if h > w:
-            ow = short_size
-            oh = int(1.0 * h * ow / w)
-        else:
-            oh = short_size
-            ow = int(1.0 * w * oh / h)
-        img = img.resize((ow, oh), Image.BILINEAR)
-        mask = mask.resize((ow, oh), Image.NEAREST)
-        # pad crop
-        if short_size < min(crop_size):
-            padh = crop_size[0] - oh if oh < crop_size[0] else 0
-            padw = crop_size[1] - ow if ow < crop_size[1] else 0
-            img = ImageOps.expand(img, border=(0, 0, padw, padh), fill=0)
-            mask = ImageOps.expand(mask, border=(0, 0, padw, padh), fill=-1)
-        # random crop crop_size
-        w, h = img.size
-        x1 = random.randint(0, w - crop_size[1])
-        y1 = random.randint(0, h - crop_size[0])
-        img = img.crop((x1, y1, x1 + crop_size[1], y1 + crop_size[0]))
-        mask = mask.crop((x1, y1, x1 + crop_size[1], y1 + crop_size[0]))
+
+        # random crop
+        if cfg.AUG.CROP:
+            crop_size = self.crop_size
+            # random scale (short edge)
+            short_size = random.randint(int(self.base_size * 0.5), int(self.base_size * 2.0))
+            w, h = img.size
+            if h > w:
+                ow = short_size
+                oh = int(1.0 * h * ow / w)
+            else:
+                oh = short_size
+                ow = int(1.0 * w * oh / h)
+            img = img.resize((ow, oh), Image.BILINEAR)
+            mask = mask.resize((ow, oh), Image.NEAREST)
+            # pad crop
+            if short_size < min(crop_size):
+                padh = crop_size[0] - oh if oh < crop_size[0] else 0
+                padw = crop_size[1] - ow if ow < crop_size[1] else 0
+                img = ImageOps.expand(img, border=(0, 0, padw, padh), fill=0)
+                mask = ImageOps.expand(mask, border=(0, 0, padw, padh), fill=-1)
+            # random crop crop_size
+            w, h = img.size
+            x1 = random.randint(0, w - crop_size[1])
+            y1 = random.randint(0, h - crop_size[0])
+            img = img.crop((x1, y1, x1 + crop_size[1], y1 + crop_size[0]))
+            mask = mask.crop((x1, y1, x1 + crop_size[1], y1 + crop_size[0]))
+
         # gaussian blur as in PSP
         if cfg.AUG.BLUR_PROB > 0 and random.random() < cfg.AUG.BLUR_PROB:
             radius = cfg.AUG.BLUR_RADIUS if cfg.AUG.BLUR_RADIUS > 0 else random.random()
             img = img.filter(ImageFilter.GaussianBlur(radius=radius))
+
         # color jitter
         if self.color_jitter:
             img = self.color_jitter(img)
+
         # final transform
         img, mask = self._img_transform(img), self._mask_transform(mask)
+
         return img, mask
 
     def _img_transform(self, img):

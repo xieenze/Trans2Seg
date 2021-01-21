@@ -34,6 +34,7 @@ cfg.AUG.BLUR_PROB = 0.0
 cfg.AUG.BLUR_RADIUS = 0.0
 # color jitter, float or tuple: (0.1, 0.2, 0.3, 0.4)
 cfg.AUG.COLOR_JITTER = None
+cfg.AUG.CROP = True
 ########################### train config ##########################################
 # epochs
 cfg.TRAIN.EPOCHS = 30
@@ -59,7 +60,8 @@ cfg.TRAIN.RESUME_MODEL_PATH = ''
 cfg.TRAIN.SYNC_BATCH_NORM = True
 # save model every checkpoint-epoch
 cfg.TRAIN.SNAPSHOT_EPOCH = 1
-
+# apex training?
+cfg.TRAIN.APEX = False
 ########################### optimizer config ##################################
 # base learning rate
 cfg.SOLVER.LR = 1e-4
@@ -214,3 +216,13 @@ cfg.MODEL.HRNET.STAGE4.FUSE_METHOD = 'SUM'
 
 ########################## translab config ######################################
 cfg.MODEL.TRANSLAB.BOUNDARY_WEIGHT = 5
+
+########################## transtrans config #####################################
+cfg.MODEL.TRANS2Seg.embed_dim = 256
+cfg.MODEL.TRANS2Seg.depth = 4
+cfg.MODEL.TRANS2Seg.num_heads = 8
+cfg.MODEL.TRANS2Seg.mlp_ratio = 3.
+cfg.MODEL.TRANS2Seg.hid_dim = 64
+
+
+

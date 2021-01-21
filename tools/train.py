@@ -25,15 +25,21 @@ from segmentron.utils.score import SegmentationMetric
 from segmentron.utils.filesystem import save_checkpoint
 from segmentron.utils.options import parse_args
 from segmentron.utils.default_setup import default_setup
-from segmentron.utils.visualize import show_flops_params
+from segmentron.utils.visualize import show_flops_params, get_color_pallete
 from segmentron.config import cfg
 from tabulate import tabulate
 from IPython import embed
+from PIL import Image
+try:
+    import apex
+except:
+    print('apex is not installed')
 
 class Trainer(object):
     def __init__(self, args):
         self.args = args
         self.device = torch.device(args.device)
+        self.use_fp16 = cfg.TRAIN.APEX
 
         # image transform
         input_transform = transforms.Compose([
@@ -52,6 +58,8 @@ class Trainer(object):
         train_dataset = get_segmentation_dataset(cfg.DATASET.NAME, split='train', mode='train', **data_kwargs)
         val_dataset = get_segmentation_dataset(cfg.DATASET.NAME, split='val', mode='testval', **data_kwargs_testval)
         test_dataset = get_segmentation_dataset(cfg.DATASET.NAME, split='test', mode='testval', **data_kwargs_testval)
+
+        self.classes = test_dataset.classes
 
         self.iters_per_epoch = len(train_dataset) // (args.num_gpus * cfg.TRAIN.BATCH_SIZE)
         self.max_iters = cfg.TRAIN.EPOCHS * self.iters_per_epoch
@@ -100,6 +108,11 @@ class Trainer(object):
                                                ignore_index=cfg.DATASET.IGNORE_INDEX).to(self.device)
         # optimizer, for model just includes encoder, decoder(head and auxlayer).
         self.optimizer = get_optimizer(self.model)
+        # apex
+        if self.use_fp16:
+            self.model, self.optimizer = apex.amp.initialize(self.model.cuda(), self.optimizer, opt_level="O1")
+            logging.info('**** Initializing mixed precision done. ****')
+
         # lr scheduling
         self.lr_scheduler = get_scheduler(self.optimizer, max_iters=self.max_iters, iters_per_epoch=self.iters_per_epoch)
         # resume checkpoint if needed
@@ -150,7 +163,11 @@ class Trainer(object):
             losses_reduced = sum(loss for loss in loss_dict_reduced.values())
 
             self.optimizer.zero_grad()
-            losses.backward()
+            if self.use_fp16:
+                with apex.amp.scale_loss(losses, self.optimizer) as scaled_loss:
+                    scaled_loss.backward()
+            else:
+                losses.backward()
             self.optimizer.step()
             self.lr_scheduler.step()
 
@@ -170,6 +187,7 @@ class Trainer(object):
 
             if not self.args.skip_val and iteration % val_per_iters == 0:
                 self.validation(epoch)
+                self.test()
                 self.model.train()
 
         total_training_time = time.time() - start_time
@@ -205,7 +223,7 @@ class Trainer(object):
         logging.info("[EVAL END] Epoch: {:d}, pixAcc: {:.3f}, mIoU: {:.3f}".format(epoch, pixAcc * 100, mIoU * 100))
         synchronize()
 
-    def test(self,):
+    def test(self, vis=False):
         self.metric.reset()
         if self.args.distributed:
             model = self.model.module
@@ -226,6 +244,32 @@ class Trainer(object):
                     assert cfg.TEST.CROP_SIZE[1] == size[1]
                     output = model(image)[0]
 
+            if vis:
+                save_gt = False
+                if save_gt:
+                    test_path = '/mnt/lustre/xieenze/xez_space/TransparentSeg/datasets/transparent/Trans10K_cls12/test/images'
+                    save_path = 'workdirs/trans10kv2/gt_img'
+                    if not os.path.exists(save_path):
+                        os.makedirs(save_path)
+                    gt_img = Image.open(os.path.join(test_path, filename[0])).resize((512,512))
+                    gt_img.save(os.path.join(save_path, str(i) + '.png'))
+
+                    gt_mask = target[0].data.cpu().numpy()
+                    vis_gt = get_color_pallete(gt_mask, dataset='trans10kv2')
+                    save_path = 'workdirs/trans10kv2/gt_mask'
+                    if not os.path.exists(save_path):
+                        os.makedirs(save_path)
+                    vis_gt.save(os.path.join(save_path, str(i) + '.png'))
+                else:
+                    vis_pred = output[0].permute(1,2,0).argmax(-1).data.cpu().numpy()
+                    vis_pred = get_color_pallete(vis_pred, dataset='trans10kv2')
+                    save_path = os.path.join(cfg.TRAIN.MODEL_SAVE_DIR, 'vis')
+                    if not os.path.exists(save_path):
+                        os.makedirs(save_path)
+                    vis_pred.save(os.path.join(save_path, str(i)+'.png'))
+                print("[VIS TEST] Sample: {:d}".format(i+1))
+                continue
+
             self.metric.update(output, target)
             pixAcc, mIoU, category_iou = self.metric.get(return_category_iou=True)
             logging.info("[TEST] Sample: {:d}, pixAcc: {:.3f}, mIoU: {:.3f}".format(i + 1, pixAcc * 100, mIoU * 100))
@@ -236,11 +280,10 @@ class Trainer(object):
 
         headers = ['class id', 'class name', 'iou']
         table = []
-        self.classes = self.test_loader.classes
         for i, cls_name in enumerate(self.classes):
             table.append([cls_name, category_iou[i]])
-        logging.info('Category iou: \n {}'.format(tabulate(table, headers, tablefmt='grid', showindex="always",
-                                                           numalign='center', stralign='center')))
+        logging.info('Category iou: \n {}'.format(tabulate(table, headers, tablefmt='grid',
+                                                           showindex="always", numalign='center', stralign='center')))
 
 
 if __name__ == '__main__':
@@ -260,7 +303,7 @@ if __name__ == '__main__':
     if args.test:
         assert 'pth' in cfg.TEST.TEST_MODEL_PATH, 'please provide test model pth!'
         logging.info('test model......')
-        trainer.test()
+        trainer.test(args.vis)
     else:
         trainer.train()
         trainer.test()

@@ -1,0 +1,76 @@
+DATASET:
+    NAME: "transparent11"
+    MEAN: [0.485, 0.456, 0.406]
+    STD: [0.229, 0.224, 0.225]
+
+TRAIN:
+    EPOCHS: 50
+    BATCH_SIZE: 4
+    CROP_SIZE: 480
+    BASE_SIZE: 513
+    MODEL_SAVE_DIR: 'workdirs/trans10kv2/hrnet_w18'
+TEST:
+    BATCH_SIZE: 4
+    CROP_SIZE: (512, 512)
+
+SOLVER:
+    LR: 0.01
+    WEIGHT_DECAY: 5e-4
+    DECODER_LR_FACTOR: 1.0
+
+MODEL:
+    MODEL_NAME: "HRNet"
+    BACKBONE: "hrnet_w18_small_v1"
+    BN_TYPE: 'BN'
+    BN_MOMENTUM: 0.01
+    HRNET:
+        FINAL_CONV_KERNEL: 1
+        STAGE1:
+            NUM_MODULES: 1
+            NUM_BRANCHES: 1
+            BLOCK: BOTTLENECK
+            NUM_BLOCKS:
+                - 1
+            NUM_CHANNELS:
+                - 32
+            FUSE_METHOD: SUM
+        STAGE2:
+            NUM_MODULES: 1
+            NUM_BRANCHES: 2
+            BLOCK: BASIC
+            NUM_BLOCKS:
+                - 2
+                - 2
+            NUM_CHANNELS:
+                - 16
+                - 32
+            FUSE_METHOD: SUM
+        STAGE3:
+            NUM_MODULES: 1
+            NUM_BRANCHES: 3
+            BLOCK: BASIC
+            NUM_BLOCKS:
+                - 2
+                - 2
+                - 2
+            NUM_CHANNELS:
+                - 16
+                - 32
+                - 64
+            FUSE_METHOD: SUM
+        STAGE4:
+            NUM_MODULES: 1
+            NUM_BRANCHES: 4
+            BLOCK: BASIC
+            NUM_BLOCKS:
+                - 2
+                - 2
+                - 2
+                - 2
+            NUM_CHANNELS:
+                - 16
+                - 32
+                - 64
+                - 128
+            FUSE_METHOD: SUM
+

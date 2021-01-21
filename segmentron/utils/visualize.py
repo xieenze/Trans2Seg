@@ -95,6 +95,7 @@ def get_color_pallete(npimg, dataset='cityscape'):
     # recovery boundary
     if dataset in ('pascal_voc', 'pascal_aug'):
         npimg[npimg == -1] = 255
+
     # put colormap
     if dataset == 'ade20k':
         npimg = npimg + 1
@@ -105,9 +106,14 @@ def get_color_pallete(npimg, dataset='cityscape'):
         out_img = Image.fromarray(npimg.astype('uint8'))
         out_img.putpalette(cityscapepallete)
         return out_img
-    out_img = Image.fromarray(npimg.astype('uint8'))
-    out_img.putpalette(vocpallete)
-    return out_img
+    elif dataset == 'trans10kv2':
+        out_img = Image.fromarray(npimg.astype('uint8'))
+        out_img.putpalette(trans10kv2pallete)
+        return out_img
+    elif dataset == 'pascal_voc':
+        out_img = Image.fromarray(npimg.astype('uint8'))
+        out_img.putpalette(vocpallete)
+        return out_img
 
 
 def _getvocpallete(num_cls):
@@ -171,3 +177,18 @@ cityscapepallete = [
     0, 0, 230,
     119, 11, 32,
 ]
+
+trans10kv2pallete = [
+    0, 0, 0,
+    120, 120, 70,
+    235, 255, 7,
+    6, 230, 230,
+    204, 255, 4,
+    120, 120, 120,
+    140, 140, 140,
+    255, 51, 7,
+    224, 5, 255,
+    204, 5, 255,
+    150, 5, 61,
+    4, 250, 7]
+

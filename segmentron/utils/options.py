@@ -2,7 +2,7 @@ import argparse
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Segmentron')
-    parser.add_argument('--config-file', metavar="FILE",
+    parser.add_argument('--config-file' ,metavar="FILE",
                         help='config file path')
     # cuda setting
     parser.add_argument('--no-cuda', action='store_true', default=False,
@@ -20,6 +20,8 @@ def parse_args():
                         help='skip validation during training')
     parser.add_argument('--test', action='store_true', default=False,
                         help='test model')
+    parser.add_argument('--vis', action='store_true', default=False,
+                        help='visualize images')
     # for visual
     parser.add_argument('--input-img', type=str, default='tools/demo_vis.png',
                         help='path to the input image or a directory of images')

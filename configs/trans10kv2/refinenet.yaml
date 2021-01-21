@@ -7,15 +7,15 @@ TRAIN:
     BATCH_SIZE: 4
     CROP_SIZE: 480
     BASE_SIZE: 513
-    MODEL_SAVE_DIR: 'workdirs/trans10kv2/deeplab_r50'
+    MODEL_SAVE_DIR: 'workdirs/trans10kv2/refinenet'
 TEST:
     BATCH_SIZE: 4
-#    CROP_SIZE: (512, 512)
     CROP_SIZE: (513, 513)
 
 SOLVER:
-    LR: 0.01
-    
+    LR: 0.001
+
 MODEL:
-    MODEL_NAME: "DeepLabV3_Plus"
-    BACKBONE: "resnet50c"
+    MODEL_NAME: "RefineNet"
+    BACKBONE: "resnet50"
+

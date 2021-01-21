@@ -27,3 +27,4 @@ from .enet import ENet
 from .edanet import EDANet
 from .pointrend import PointRend
 from .translab import TransLab
+from .trans2seg import Trans2Seg

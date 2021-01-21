@@ -73,3 +73,5 @@ class _DeepLabHead(nn.Module):
             return self.block(torch.cat([x, c1], dim=1))
 
         return self.block(x)
+
+    

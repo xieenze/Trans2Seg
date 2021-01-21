@@ -113,3 +113,5 @@ __MACOSX/
 runs
 workdirs
 datasets
+debug*
+trash

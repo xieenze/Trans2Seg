@@ -7,15 +7,20 @@ TRAIN:
     BATCH_SIZE: 4
     CROP_SIZE: 480
     BASE_SIZE: 513
-    MODEL_SAVE_DIR: 'workdirs/trans10kv2/deeplab_r50'
+    MODEL_SAVE_DIR: 'workdirs/trans10kv2/pspnet'
 TEST:
     BATCH_SIZE: 4
-#    CROP_SIZE: (512, 512)
     CROP_SIZE: (513, 513)
 
 SOLVER:
     LR: 0.01
-    
+    AUX: True
+    AUX_WEIGHT: 0.4
+
+AUG:
+    BLUR_PROB: 0.5
+
 MODEL:
-    MODEL_NAME: "DeepLabV3_Plus"
-    BACKBONE: "resnet50c"
+    MODEL_NAME: "PSPNet"
+    BACKBONE: "resnet50"
+    OUTPUT_STRIDE: 8

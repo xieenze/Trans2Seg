@@ -52,6 +52,9 @@ def get_optimizer(model):
     elif opt_lower == 'adam':
         optimizer = optim.Adam(
             parameters, lr=cfg.SOLVER.LR, eps=cfg.SOLVER.EPSILON, weight_decay=cfg.SOLVER.WEIGHT_DECAY)
+    elif opt_lower == 'adamw':
+        optimizer = optim.AdamW(
+            parameters, lr=cfg.SOLVER.LR, eps=cfg.SOLVER.EPSILON, weight_decay=cfg.SOLVER.WEIGHT_DECAY)
     elif opt_lower == 'adadelta':
         optimizer = optim.Adadelta(
             parameters, lr=cfg.SOLVER.LR, eps=cfg.SOLVER.EPSILON, weight_decay=cfg.SOLVER.WEIGHT_DECAY)
