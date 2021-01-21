@@ -6,7 +6,7 @@ This repository contains the data and code for "Segmenting Transparent Objects i
 ## Environments
 
 - python 3
-- torch = 1.4.0 (>1.1.0 with cause performance drop, we can't find the reason)
+- torch = 1.4.0
 - torchvision
 - pyyaml
 - Pillow
