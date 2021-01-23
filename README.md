@@ -1,6 +1,6 @@
 # Transparent Transformer Segmentation
 ## Introduction
-This repository contains the data and code for "Segmenting Transparent Objects in the Wild with Transformer".
+This repository contains the data and code for "Trans2Seg: Transparent Object Segmentation with Transformer 	".
 
 
 ## Environments
