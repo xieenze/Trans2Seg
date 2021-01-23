@@ -9,7 +9,7 @@ import torch.nn.functional as F
 
 
 class Mlp(nn.Module):
-    #两层mlp, fc-relu-drop-fc-relu-drop
+    #two mlp, fc-relu-drop-fc-relu-drop
     def __init__(self, in_features, hidden_features=None, out_features=None, act_layer=nn.GELU, drop=0.):
         super().__init__()
         out_features = out_features or in_features
@@ -93,7 +93,6 @@ class Attention_Decoder(nn.Module):
         x = self.proj(x)
         x = self.proj_drop(x)  # [B, 12, 256]
 
-        # need_adjust.........
         # attn = attn3.permute(0, 2, 1, 3)
         attn = attn1.permute(0, 2, 1, 3)
         # attn = attn2.permute(0, 2, 1, 3)
@@ -179,7 +178,6 @@ class VisionTransformer(nn.Module):
         self.pos_embed = nn.Parameter(torch.zeros(1, num_patches + 1, embed_dim))
         self.pos_drop = nn.Dropout(p=drop_rate)
 
-        # need_adjust.........
         self.cls_embed = nn.Parameter(torch.zeros(1, nclass, embed_dim))
 
         dpr = [x.item() for x in torch.linspace(0, drop_path_rate, depth)]  # stochastic depth decay rule
@@ -189,7 +187,6 @@ class VisionTransformer(nn.Module):
                 drop=drop_rate, attn_drop=attn_drop_rate, drop_path=dpr[i], norm_layer=norm_layer)
             for i in range(depth)])
 
-        # need_adjust.........
         self.blocks_decoder = nn.ModuleList([
             Block_Decoder(
                 dim=embed_dim, num_heads=num_heads, mlp_ratio=mlp_ratio, feat_HxW=decoder_feat_HxW, qkv_bias=qkv_bias, qk_scale=qk_scale,
@@ -256,7 +253,7 @@ class VisionTransformer(nn.Module):
         attns_list = []
         feat = x
         B = feat.shape[0]
-        # need_adjust.........
+
         for idx, blk in enumerate(self.blocks_decoder):
             if idx == 0:
                 query = self.cls_embed.expand(B, -1, -1)
