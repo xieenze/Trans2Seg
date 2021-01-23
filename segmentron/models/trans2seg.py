@@ -28,7 +28,6 @@ class Trans2Seg(SegBaseModel):
         vit_params = cfg.MODEL.TRANS2Seg
         hid_dim = cfg.MODEL.TRANS2Seg.hid_dim
 
-        #训练测试都直接resize到相同size
         assert cfg.AUG.CROP == False and cfg.TRAIN.CROP_SIZE[0] == cfg.TRAIN.CROP_SIZE[1]\
                == cfg.TRAIN.BASE_SIZE == cfg.TEST.CROP_SIZE[0] == cfg.TEST.CROP_SIZE[1]
         c4_HxW = (cfg.TRAIN.BASE_SIZE // 16) ** 2
