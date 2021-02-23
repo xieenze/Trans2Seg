@@ -57,3 +57,16 @@ bash tools/dist_train.sh configs/trans10kv2/trans2seg/trans2seg_medium.yaml 8
 ```
 bash tools/dist_train.sh $CONFIG-FILE $GPUS --test TEST.TEST_MODEL_PATH $MODEL_PATH
 ```
+
+
+## Citations
+Please consider citing our paper in your publications if the project helps your research. BibTeX reference is as follows.
+
+```
+@article{xie2021segmenting,
+  title={Segmenting transparent object in the wild with transformer},
+  author={Xie, Enze and Wang, Wenjia and Wang, Wenhai and Sun, Peize and Xu, Hang and Liang, Ding and Luo, Ping},
+  journal={arXiv preprint arXiv:2101.08461},
+  year={2021}
+}
+```
