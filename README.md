@@ -34,7 +34,7 @@ Trans10K_v2
     ├── images
     └── masks_12
 ```
-Dataset will be released soon.
+Download Dataset: [Baidu](https://pan.baidu.com/s/1P-2l-Q2brbnwRd2kXi--Dg) code: oqms
 
 ## Network Define
 The code of Network pipeline is in `segmentron/models/trans2seg.py`.
