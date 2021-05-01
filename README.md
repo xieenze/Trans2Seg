@@ -1,6 +1,6 @@
 # Transparent Transformer Segmentation
 ## Introduction
-This repository contains the data and code for "Trans2Seg: Transparent Object Segmentation with Transformer 	".
+This repository contains the data and code for IJCAI 2021 paper [Segmenting transparent object in the wild with transformer](https://arxiv.org/abs/2101.08461).
 
 
 ## Environments
