@@ -34,7 +34,8 @@ Trans10K_v2
     ├── images
     └── masks_12
 ```
-Download Dataset: [Baidu Drive](https://pan.baidu.com/s/1P-2l-Q2brbnwRd2kXi--Dg). code: oqms
+Download Dataset: [Google Drive](https://drive.google.com/file/d/1YzAAMY8xfL9BMTIDU-nFC3dcGbSIBPu5/view?usp=sharing).
+[Baidu Drive](https://pan.baidu.com/s/1P-2l-Q2brbnwRd2kXi--Dg). code: oqms
 
 ## Network Define
 The code of Network pipeline is in `segmentron/models/trans2seg.py`.
